@@ -9,10 +9,12 @@
 import SwiftUI
 
 struct CheckoutView: View {
-    @ObservedObject var order: Order
+    @ObservedObject var oo: ObservableOrder
     
     @State private var confirmationMessage = ""
     @State private var showingConfirmation = false
+    
+    @State private var showingAlert = false
     
     var body: some View {
         ScrollView {
@@ -26,7 +28,7 @@ struct CheckoutView: View {
                 }
                 .frame(height: 233)
                 
-                Text("Your cost is: \(order.cost, format: .currency(code: "USD"))")
+                Text("Your cost is: \(self.oo.order.cost, format: .currency(code: "USD"))")
                     .font(.title)
                 
                 Button("Place order") {
@@ -35,6 +37,11 @@ struct CheckoutView: View {
                     }
                 }
                 .padding()
+            }
+            .alert("No internet!", isPresented: $showingAlert) {
+                Button("OK") { }
+            } message: {
+                Text("We couldn't process your order")
             }
         }
         .navigationTitle("Check out")
@@ -47,7 +54,7 @@ struct CheckoutView: View {
     }
     
     func placeOrder() async {
-        guard let encoded = try? JSONEncoder().encode(order) else {
+        guard let encoded = try? JSONEncoder().encode(oo.order) else {
             print("Failed to encode order")
             return
         }
@@ -65,12 +72,13 @@ struct CheckoutView: View {
             showingConfirmation = true
         } catch {
             print("Checkout failed.")
+            showingAlert = true
         }
     }
 }
 
 struct CheckoutView_Previews: PreviewProvider {
     static var previews: some View {
-        CheckoutView(order: Order())
+        CheckoutView(oo: ObservableOrder(order: Order()))
     }
 }
